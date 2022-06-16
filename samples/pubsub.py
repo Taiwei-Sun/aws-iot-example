@@ -62,6 +62,22 @@ def on_resubscribe_complete(resubscribe_future):
 # Callback when the subscribed topic receives a message
 def on_message_received(topic, payload, dup, qos, retain, **kwargs):
     print("Received message from topic '{}': {}".format(topic, payload))
+    topic_parsed = False
+    if "/" in topic:
+        parsed_topic = topic.split("/")
+        if len(parsed_topic) == 3:
+            # this topic has the correct format
+            if (parsed_topic[0] == 'device') and (parsed_topic[2] == 'details'):
+                # this is a topic we care about, so check the 2nd element
+                if (parsed_topic[1] == 'temp'):
+                    payload_dic=json.loads(payload.decode('utf-8'))
+                    print("Received temperature request: currentTemp:{}".format(payload_dic['currentTemp']))
+                    topic_parsed = True
+                if (parsed_topic[1] == 'light'):
+                    print("Received light request: {}".format(payload))
+                    topic_parsed = True
+    if not topic_parsed:
+        print("Unrecognized message topic.")
     global received_count
     received_count += 1
     if received_count == cmdUtils.get_command("count"):
